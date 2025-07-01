@@ -1,11 +1,11 @@
 import { View, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function HomeScreen() {
+export default function OrdersScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Home</Text>
+        <Text style={styles.title}>Orders</Text>
       </View>
     </SafeAreaView>
   );
@@ -27,4 +27,4 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     marginBottom: 20,
   },
-});
+}); 
