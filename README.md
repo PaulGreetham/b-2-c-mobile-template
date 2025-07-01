@@ -45,8 +45,7 @@ npm install
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Click **"Create a project"**
 3. Enter project name (e.g., `my-app-name`)
-4. **Disable** Google Analytics (optional)
-5. Click **"Create project"**
+4. Click **"Create project"**
 
 #### Enable Authentication
 1. In Firebase Console, go to **Authentication** → **Get started**
