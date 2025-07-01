@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { authStyles } from '@/styles/authStyles';
+import { useTheme } from '@/contexts/ThemeContext';
+import { createAuthStyles } from '@/styles/authStyles';
 import { useAuth } from '@/hooks/useAuth';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 
@@ -13,8 +14,12 @@ export const AuthScreen: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { theme } = useTheme();
 
   const { login, signup, sendVerificationEmail } = useAuth();
+  
+  // Create themed styles
+  const authStyles = createAuthStyles(theme);
 
   const handleLogin = async () => {
     setLoading(true);
@@ -110,10 +115,11 @@ export const AuthScreen: React.FC = () => {
                   <View style={authStyles.inputGroup}>
                     <Text style={authStyles.inputLabel}>Email</Text>
                     <View style={authStyles.inputContainer}>
-                      <FontAwesome name="envelope" size={16} color="#9CA3AF" style={authStyles.inputIcon} />
+                      <FontAwesome name="envelope" size={16} color={theme.colors.textMuted} style={authStyles.inputIcon} />
                       <TextInput
                         style={authStyles.textInput}
                         placeholder="Enter your email"
+                        placeholderTextColor={theme.colors.textMuted}
                         value={email}
                         onChangeText={setEmail}
                         keyboardType="email-address"
@@ -127,10 +133,11 @@ export const AuthScreen: React.FC = () => {
                     <View style={authStyles.inputGroup}>
                       <Text style={authStyles.inputLabel}>Full Name</Text>
                       <View style={authStyles.inputContainer}>
-                        <FontAwesome name="user" size={16} color="#9CA3AF" style={authStyles.inputIcon} />
+                        <FontAwesome name="user" size={16} color={theme.colors.textMuted} style={authStyles.inputIcon} />
                         <TextInput
                           style={authStyles.textInput}
                           placeholder="Enter your full name"
+                          placeholderTextColor={theme.colors.textMuted}
                           value={displayName}
                           onChangeText={setDisplayName}
                           autoCapitalize="words"
@@ -143,10 +150,11 @@ export const AuthScreen: React.FC = () => {
                   <View style={authStyles.inputGroup}>
                     <Text style={authStyles.inputLabel}>Password</Text>
                     <View style={authStyles.inputContainer}>
-                      <FontAwesome name="lock" size={16} color="#9CA3AF" style={authStyles.inputIcon} />
+                      <FontAwesome name="lock" size={16} color={theme.colors.textMuted} style={authStyles.inputIcon} />
                       <TextInput
                         style={authStyles.textInput}
                         placeholder="Enter your password"
+                        placeholderTextColor={theme.colors.textMuted}
                         value={password}
                         onChangeText={setPassword}
                         secureTextEntry
@@ -160,10 +168,11 @@ export const AuthScreen: React.FC = () => {
                     <View style={authStyles.inputGroup}>
                       <Text style={authStyles.inputLabel}>Confirm Password</Text>
                       <View style={authStyles.inputContainer}>
-                        <FontAwesome name="lock" size={16} color="#9CA3AF" style={authStyles.inputIcon} />
+                        <FontAwesome name="lock" size={16} color={theme.colors.textMuted} style={authStyles.inputIcon} />
                         <TextInput
                           style={authStyles.textInput}
                           placeholder="Confirm your password"
+                          placeholderTextColor={theme.colors.textMuted}
                           value={confirmPassword}
                           onChangeText={setConfirmPassword}
                           secureTextEntry

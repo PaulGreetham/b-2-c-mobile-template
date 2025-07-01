@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Alert } from 'react-native';
-import { profileStyles } from '@/styles/profileStyles';
+import { View, Alert, StyleSheet } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { ProfileHeader } from './ProfileHeader';
 import { ActionButtons } from './ActionButtons';
@@ -12,6 +12,7 @@ export const ProfileScreen: React.FC = () => {
   const [showChangeName, setShowChangeName] = useState(false);
   const [showChangeEmail, setShowChangeEmail] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const { theme } = useTheme();
 
   const { 
     user, 
@@ -46,14 +47,26 @@ export const ProfileScreen: React.FC = () => {
     setPendingEmailChange(null);
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    profileContent: {
+      flex: 1,
+      padding: 20,
+      paddingTop: 60,
+    },
+  });
+
   if (!user) {
     return null; // This should not happen as this component is only rendered when user exists
   }
 
   return (
     <>
-      <View style={profileStyles.container}>
-        <View style={profileStyles.profileContent}>
+      <View style={styles.container}>
+        <View style={styles.profileContent}>
           <ProfileHeader
             user={user}
             pendingEmailChange={pendingEmailChange}

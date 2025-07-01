@@ -1,9 +1,9 @@
 import { StyleSheet } from 'react-native';
 
-export const authStyles = StyleSheet.create({
+export const createAuthStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -17,7 +17,7 @@ export const authStyles = StyleSheet.create({
     paddingTop: 0,
   },
   authCard: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.background,
     padding: 46,
     width: '100%',
     height: '100%',
@@ -30,7 +30,7 @@ export const authStyles = StyleSheet.create({
   avatar: {
     width: 80,
     height: 80,
-    backgroundColor: '#3B82F6',
+    backgroundColor: theme.colors.primary,
     borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
@@ -39,12 +39,12 @@ export const authStyles = StyleSheet.create({
   authTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#111827',
+    color: theme.colors.text,
     marginTop: 16,
   },
   authSubtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: theme.colors.textSecondary,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -57,16 +57,16 @@ export const authStyles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: theme.colors.textSecondary,
     marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -76,26 +76,26 @@ export const authStyles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 16,
-    color: '#111827',
+    color: theme.colors.text,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
     marginBottom: 24,
   },
   forgotPasswordText: {
-    color: '#3B82F6',
+    color: theme.colors.primary,
     fontSize: 14,
     fontWeight: '500',
   },
   submitButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: theme.colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 24,
   },
   submitButtonDisabled: {
-    backgroundColor: '#9CA3AF',
+    backgroundColor: theme.colors.textMuted,
   },
   submitButtonText: {
     color: 'white',
@@ -108,11 +108,11 @@ export const authStyles = StyleSheet.create({
     alignItems: 'center',
   },
   switchModeText: {
-    color: '#6B7280',
+    color: theme.colors.textSecondary,
     fontSize: 14,
   },
   switchModeLink: {
-    color: '#3B82F6',
+    color: theme.colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
