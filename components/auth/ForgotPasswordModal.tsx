@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, Alert, StyleSheet } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ForgotPasswordModalProps {
@@ -18,6 +19,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   const [loading, setLoading] = useState(false);
   const { resetPassword } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   const styles = StyleSheet.create({
     modalOverlay: {
@@ -105,10 +107,10 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     setLoading(false);
     
     if (result.success) {
-      Alert.alert('Password Reset Email Sent', result.data?.message);
+      Alert.alert(t('auth.passwordResetEmailSent'), result.data?.message);
       handleClose();
     } else {
-      Alert.alert('Reset Failed', result.error);
+      Alert.alert(t('auth.resetFailed'), result.error);
     }
   };
 
@@ -121,19 +123,19 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Reset Password</Text>
+          <Text style={styles.modalTitle}>{t('auth.resetPassword')}</Text>
           
           <Text style={styles.modalDescription}>
-            Enter your email address and we'll send you a link to reset your password.
+            {t('auth.resetPasswordDescription')}
           </Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Email Address</Text>
+            <Text style={styles.inputLabel}>{t('auth.emailAddress')}</Text>
             <TextInput
               style={styles.modalInput}
               value={resetEmail}
               onChangeText={setResetEmail}
-              placeholder="Enter your email"
+              placeholder={t('auth.enterEmail')}
               placeholderTextColor={theme.colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -143,7 +145,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
           <View style={styles.modalButtons}>
             <TouchableOpacity style={styles.modalCancelButton} onPress={handleClose}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
+              <Text style={styles.modalCancelText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.modalSubmitButton, loading && styles.modalSubmitButtonDisabled]} 
@@ -151,7 +153,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               disabled={loading}
             >
               <Text style={styles.modalSubmitText}>
-                {loading ? 'Sending...' : 'Send Reset Link'}
+                {loading ? t('common.sending') : t('auth.sendResetLink')}
               </Text>
             </TouchableOpacity>
           </View>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, Alert, StyleSheet } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ChangeEmailModalProps {
@@ -19,6 +20,7 @@ export const ChangeEmailModal: React.FC<ChangeEmailModalProps> = ({
   const [loading, setLoading] = useState(false);
   const { changeEmail } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   const styles = StyleSheet.create({
     modalOverlay: {
@@ -104,10 +106,10 @@ export const ChangeEmailModal: React.FC<ChangeEmailModalProps> = ({
     setLoading(false);
     
     if (result.success) {
-      Alert.alert('Email Change Request Sent', result.data?.message);
+      Alert.alert(t('profile.emailChangeRequestSent'), result.data?.message);
       handleClose();
     } else {
-      Alert.alert('Update Failed', result.error);
+      Alert.alert(t('profile.updateFailed'), result.error);
     }
   };
 
@@ -121,15 +123,15 @@ export const ChangeEmailModal: React.FC<ChangeEmailModalProps> = ({
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Change Email</Text>
+          <Text style={styles.modalTitle}>{t('profile.changeEmail')}</Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>New Email</Text>
+            <Text style={styles.inputLabel}>{t('profile.newEmail')}</Text>
             <TextInput
               style={styles.modalInput}
               value={newEmail}
               onChangeText={setNewEmail}
-              placeholder="Enter new email"
+              placeholder={t('profile.enterNewEmail')}
               placeholderTextColor={theme.colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -137,23 +139,23 @@ export const ChangeEmailModal: React.FC<ChangeEmailModalProps> = ({
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Current Password</Text>
+            <Text style={styles.inputLabel}>{t('profile.currentPassword')}</Text>
             <TextInput
               style={styles.modalInput}
               value={currentPassword}
               onChangeText={setCurrentPassword}
-              placeholder="Enter current password"
+              placeholder={t('profile.enterCurrentPassword')}
               placeholderTextColor={theme.colors.textMuted}
               secureTextEntry
             />
             <Text style={styles.inputHelpText}>
-              Use the password for your current email address: {currentEmail}
+              {t('profile.currentPasswordHelp')} {currentEmail}
             </Text>
           </View>
 
           <View style={styles.modalButtons}>
             <TouchableOpacity style={styles.modalCancelButton} onPress={handleClose}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
+              <Text style={styles.modalCancelText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.modalSubmitButton, loading && styles.modalSubmitButtonDisabled]} 
@@ -161,7 +163,7 @@ export const ChangeEmailModal: React.FC<ChangeEmailModalProps> = ({
               disabled={loading}
             >
               <Text style={styles.modalSubmitText}>
-                {loading ? 'Updating...' : 'Update Email'}
+                {loading ? t('common.updating') : t('profile.updateEmail')}
               </Text>
             </TouchableOpacity>
           </View>

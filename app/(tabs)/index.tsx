@@ -1,32 +1,38 @@
-import { View, StyleSheet, Text } from 'react-native';
+import React from 'react';
+import { View, Text } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function HomeScreen() {
   const { theme } = useTheme();
-  
-  const styles = StyleSheet.create({
+  const { t } = useLanguage();
+
+  const styles = {
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-    },
-    content: {
-      flex: 1,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
       padding: 20,
     },
     title: {
-      textAlign: 'center',
       fontSize: 32,
-      fontWeight: 'bold',
+      fontWeight: 'bold' as const,
       color: theme.colors.text,
-      marginBottom: 20,
+      textAlign: 'center' as const,
+      marginBottom: 16,
     },
-  });
+    welcome: {
+      fontSize: 18,
+      color: theme.colors.textSecondary,
+      textAlign: 'center' as const,
+    },
+  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Home</Text>
-      </View>
+      <Text style={styles.title}>{t('home.title')}</Text>
+      <Text style={styles.welcome}>{t('home.welcome')}</Text>
     </View>
   );
 }

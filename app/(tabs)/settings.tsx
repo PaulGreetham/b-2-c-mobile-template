@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
 
 export default function SettingsScreen() {
   const { theme, themeMode, toggleTheme } = useTheme();
+  const { t, currentLanguageInfo } = useLanguage();
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
 
   const getThemeModeText = () => {
-    return themeMode === 'light' ? 'Light Mode' : 'Dark Mode';
+    return themeMode === 'light' ? t('settings.lightMode') : t('settings.darkMode');
   };
 
   const getThemeModeIcon = () => {
@@ -90,34 +94,43 @@ export default function SettingsScreen() {
   return (
     <View style={settingsStyles.container}>
       <ScrollView style={settingsStyles.content}>
-        <Text style={settingsStyles.title}>Settings</Text>
+        <Text style={settingsStyles.title}>{t('settings.title')}</Text>
         
         {/* Display Section */}
         <View style={settingsStyles.section}>
-          <Text style={settingsStyles.sectionTitle}>Display</Text>
+          <Text style={settingsStyles.sectionTitle}>{t('settings.display')}</Text>
           {renderSettingItem(
             getThemeModeIcon(), 
             getThemeModeText(), 
             toggleTheme
           )}
-          {renderSettingItem('language', 'Language')}
+          {renderSettingItem(
+            'language', 
+            t('settings.languageWithCurrent'), 
+            () => setShowLanguageSelector(true)
+          )}
         </View>
 
         {/* App Section */}
         <View style={settingsStyles.section}>
-          <Text style={settingsStyles.sectionTitle}>App</Text>
-          {renderSettingItem('bell', 'Notifications')}
+          <Text style={settingsStyles.sectionTitle}>{t('settings.app')}</Text>
+          {renderSettingItem('bell', t('settings.notifications'))}
         </View>
 
         {/* Support Section */}
         <View style={settingsStyles.section}>
-          <Text style={settingsStyles.sectionTitle}>Support</Text>
-          {renderSettingItem('envelope', 'Contact Support')}
-          {renderSettingItem('question-circle', 'Q&A')}
-          {renderSettingItem('file-text', 'Terms of Service')}
-          {renderSettingItem('shield', 'Privacy Policy')}
+          <Text style={settingsStyles.sectionTitle}>{t('settings.support')}</Text>
+          {renderSettingItem('envelope', t('settings.contactSupport'))}
+          {renderSettingItem('question-circle', t('settings.qa'))}
+          {renderSettingItem('file-text', t('settings.termsOfService'))}
+          {renderSettingItem('shield', t('settings.privacyPolicy'))}
         </View>
       </ScrollView>
+
+      <LanguageSelector 
+        visible={showLanguageSelector}
+        onClose={() => setShowLanguageSelector(false)}
+      />
     </View>
   );
 } 

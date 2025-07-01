@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, Alert, StyleSheet } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ChangePasswordModalProps {
@@ -18,6 +19,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   const [loading, setLoading] = useState(false);
   const { changePassword } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   const styles = StyleSheet.create({
     modalOverlay: {
@@ -98,10 +100,10 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     setLoading(false);
     
     if (result.success) {
-      Alert.alert('Password Updated', result.data?.message);
+      Alert.alert(t('profile.passwordUpdated'), result.data?.message);
       handleClose();
     } else {
-      Alert.alert('Update Failed', result.error);
+      Alert.alert(t('profile.updateFailed'), result.error);
     }
   };
 
@@ -116,39 +118,39 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Change Password</Text>
+          <Text style={styles.modalTitle}>{t('profile.changePassword')}</Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Current Password</Text>
+            <Text style={styles.inputLabel}>{t('profile.currentPassword')}</Text>
             <TextInput
               style={styles.modalInput}
               value={currentPassword}
               onChangeText={setCurrentPassword}
-              placeholder="Enter current password"
+              placeholder={t('profile.enterCurrentPassword')}
               placeholderTextColor={theme.colors.textMuted}
               secureTextEntry
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>New Password</Text>
+            <Text style={styles.inputLabel}>{t('profile.newPassword')}</Text>
             <TextInput
               style={styles.modalInput}
               value={newPassword}
               onChangeText={setNewPassword}
-              placeholder="Enter new password"
+              placeholder={t('profile.enterNewPassword')}
               placeholderTextColor={theme.colors.textMuted}
               secureTextEntry
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Confirm New Password</Text>
+            <Text style={styles.inputLabel}>{t('profile.confirmNewPassword')}</Text>
             <TextInput
               style={styles.modalInput}
               value={confirmNewPassword}
               onChangeText={setConfirmNewPassword}
-              placeholder="Confirm new password"
+              placeholder={t('profile.confirmNewPasswordPlaceholder')}
               placeholderTextColor={theme.colors.textMuted}
               secureTextEntry
             />
@@ -156,7 +158,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
           <View style={styles.modalButtons}>
             <TouchableOpacity style={styles.modalCancelButton} onPress={handleClose}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
+              <Text style={styles.modalCancelText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.modalSubmitButton, loading && styles.modalSubmitButtonDisabled]} 
@@ -164,7 +166,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               disabled={loading}
             >
               <Text style={styles.modalSubmitText}>
-                {loading ? 'Updating...' : 'Update Password'}
+                {loading ? t('common.updating') : t('profile.updatePassword')}
               </Text>
             </TouchableOpacity>
           </View>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, Alert, StyleSheet } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ChangeNameModalProps {
@@ -18,6 +19,7 @@ export const ChangeNameModal: React.FC<ChangeNameModalProps> = ({
   const [loading, setLoading] = useState(false);
   const { updateDisplayName } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   const styles = StyleSheet.create({
     modalOverlay: {
@@ -104,10 +106,10 @@ export const ChangeNameModal: React.FC<ChangeNameModalProps> = ({
     setLoading(false);
     
     if (result.success) {
-      Alert.alert('Success', result.data?.message);
+      Alert.alert(t('common.success'), result.data?.message);
       handleClose();
     } else {
-      Alert.alert('Update Failed', result.error);
+      Alert.alert(t('profile.updateFailed'), result.error);
     }
   };
 
@@ -120,15 +122,15 @@ export const ChangeNameModal: React.FC<ChangeNameModalProps> = ({
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Change Name</Text>
+          <Text style={styles.modalTitle}>{t('profile.changeName')}</Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Display Name</Text>
+            <Text style={styles.inputLabel}>{t('profile.displayName')}</Text>
             <TextInput
               style={styles.modalInput}
               value={newDisplayName}
               onChangeText={setNewDisplayName}
-              placeholder="Enter your display name"
+              placeholder={t('profile.enterDisplayName')}
               placeholderTextColor={theme.colors.textMuted}
               autoFocus
             />
@@ -136,7 +138,7 @@ export const ChangeNameModal: React.FC<ChangeNameModalProps> = ({
 
           <View style={styles.modalButtons}>
             <TouchableOpacity style={styles.modalCancelButton} onPress={handleClose}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
+              <Text style={styles.modalCancelText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.modalSubmitButton, loading && styles.modalSubmitButtonDisabled]} 
@@ -144,7 +146,7 @@ export const ChangeNameModal: React.FC<ChangeNameModalProps> = ({
               disabled={loading}
             >
               <Text style={styles.modalSubmitText}>
-                {loading ? 'Updating...' : 'Update Name'}
+                {loading ? t('common.updating') : t('profile.updateName')}
               </Text>
             </TouchableOpacity>
           </View>

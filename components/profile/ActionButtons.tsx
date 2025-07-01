@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ActionButtonsProps {
@@ -15,6 +16,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
 }) => {
   const { logout, deleteAccount } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   const styles = StyleSheet.create({
     actionButtons: {
@@ -79,17 +81,17 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
 
   const handleLogout = async () => {
     Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
+      t('profile.signOutTitle'),
+      t('profile.signOutMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Sign Out',
+          text: t('profile.signOut'),
           style: 'destructive',
           onPress: async () => {
             const result = await logout();
             if (!result.success) {
-              Alert.alert('Error', result.error);
+              Alert.alert(t('common.error'), result.error);
             }
           }
         }
@@ -99,30 +101,30 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
 
   const handleDeleteAccount = async () => {
     Alert.alert(
-      '⚠️ Delete Account',
-      'This action will permanently delete your account and all associated data. This cannot be undone.\n\nAre you absolutely sure you want to proceed?',
+      t('profile.deleteAccountTitle'),
+      t('profile.deleteAccountMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Continue',
+          text: t('common.continue'),
           style: 'destructive',
           onPress: () => {
             Alert.prompt(
-              'Confirm Account Deletion',
-              'To confirm deletion, please enter your current password:',
+              t('profile.confirmDeletionTitle'),
+              t('profile.confirmDeletionMessage'),
               [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                  text: 'Delete Account',
+                  text: t('profile.deleteAccount'),
                   style: 'destructive',
                   onPress: async (password) => {
                     if (!password) return;
                     
                     const result = await deleteAccount(password);
                     if (result.success) {
-                      Alert.alert('Account Deleted', result.data?.message);
+                      Alert.alert(t('profile.accountDeleted'), result.data?.message);
                     } else {
-                      Alert.alert('Deletion Failed', result.error);
+                      Alert.alert(t('profile.deletionFailed'), result.error);
                     }
                   }
                 }
@@ -139,22 +141,22 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
     <View style={styles.actionButtons}>
       <TouchableOpacity style={styles.actionButton} onPress={onChangeEmail}>
         <FontAwesome name="envelope" size={16} color={theme.colors.primary} />
-        <Text style={styles.actionButtonText}>Change Email</Text>
+        <Text style={styles.actionButtonText}>{t('profile.changeEmail')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.actionButton} onPress={onChangePassword}>
         <FontAwesome name="lock" size={16} color={theme.colors.primary} />
-        <Text style={styles.actionButtonText}>Change Password</Text>
+        <Text style={styles.actionButtonText}>{t('profile.changePassword')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <FontAwesome name="sign-out" size={16} color={theme.colors.error} />
-        <Text style={styles.logoutText}>Sign Out</Text>
+        <Text style={styles.logoutText}>{t('profile.signOut')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
         <FontAwesome name="trash" size={16} color={theme.colors.error} />
-        <Text style={styles.deleteButtonText}>Delete Account</Text>
+        <Text style={styles.deleteButtonText}>{t('profile.deleteAccount')}</Text>
       </TouchableOpacity>
     </View>
   );

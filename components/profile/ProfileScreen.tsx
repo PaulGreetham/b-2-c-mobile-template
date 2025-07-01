@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
 import { ProfileHeader } from './ProfileHeader';
 import { ActionButtons } from './ActionButtons';
@@ -13,6 +14,7 @@ export const ProfileScreen: React.FC = () => {
   const [showChangeEmail, setShowChangeEmail] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   const { 
     user, 
@@ -28,18 +30,18 @@ export const ProfileScreen: React.FC = () => {
     const interval = setInterval(() => {
       refreshUserData().then((result) => {
         if (result.success && result.data?.emailUpdated) {
-          Alert.alert('Email Updated!', 'Your email address has been successfully changed.');
+          Alert.alert(t('profile.emailUpdated'), t('profile.emailUpdatedMessage'));
         }
       });
     }, 5000); // Check every 5 seconds
 
     return () => clearInterval(interval);
-  }, [pendingEmailChange, refreshUserData]);
+  }, [pendingEmailChange, refreshUserData, t]);
 
   const handleRefreshUserData = async () => {
     const result = await refreshUserData();
     if (result.success && result.data?.emailUpdated) {
-      Alert.alert('Email Updated!', 'Your email address has been successfully changed.');
+      Alert.alert(t('profile.emailUpdated'), t('profile.emailUpdatedMessage'));
     }
   };
 

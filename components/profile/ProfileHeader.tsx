@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { User } from 'firebase/auth';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProfileHeaderProps {
   user: User;
@@ -20,6 +21,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onCancelPendingEmail,
 }) => {
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   const styles = StyleSheet.create({
     authHeader: {
@@ -81,7 +83,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       {/* Display Name Section */}
       <View style={styles.nameSection}>
         <View style={styles.nameDisplay}>
-          <Text style={styles.profileName}>{user.displayName || 'Set your name'}</Text>
+          <Text style={styles.profileName}>{user.displayName || t('profile.setYourName')}</Text>
           <TouchableOpacity onPress={onEditName}>
             <FontAwesome name="edit" size={16} color={theme.colors.primary} />
           </TouchableOpacity>
@@ -93,7 +95,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         <View style={styles.pendingEmailContainer}>
           <FontAwesome name="clock-o" size={12} color={theme.colors.warning} />
           <Text style={styles.pendingEmailText}>
-            Pending: {pendingEmailChange}
+            {t('profile.pending')}: {pendingEmailChange}
           </Text>
           <TouchableOpacity 
             onPress={onRefreshUserData}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { createAuthStyles } from '@/styles/authStyles';
 import { useAuth } from '@/hooks/useAuth';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
@@ -15,6 +16,7 @@ export const AuthScreen: React.FC = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   const { login, signup, sendVerificationEmail } = useAuth();
   
@@ -31,25 +33,25 @@ export const AuthScreen: React.FC = () => {
     } else {
       if (result.data?.needsVerification) {
         Alert.alert(
-          'Email Verification Required',
+          t('auth.emailVerificationRequired'),
           result.error,
           [
-            { text: 'Cancel', style: 'cancel' },
+            { text: t('common.cancel'), style: 'cancel' },
             {
-              text: 'Resend Verification',
+              text: t('auth.resendVerification'),
               onPress: async () => {
                 const verificationResult = await sendVerificationEmail();
                 if (verificationResult.success) {
-                  Alert.alert('Verification Sent', verificationResult.data?.message);
+                  Alert.alert(t('auth.verificationSent'), verificationResult.data?.message);
                 } else {
-                  Alert.alert('Error', verificationResult.error);
+                  Alert.alert(t('common.error'), verificationResult.error);
                 }
               }
             }
           ]
         );
       } else {
-        Alert.alert('Sign In Failed', result.error);
+        Alert.alert(t('auth.signInFailed'), result.error);
       }
     }
   };
@@ -61,13 +63,13 @@ export const AuthScreen: React.FC = () => {
     
     if (result.success) {
       Alert.alert(
-        'Account Verification Email Sent',
+        t('auth.accountVerificationEmailSent'),
         result.data?.message,
-        [{ text: 'OK', onPress: () => setIsLogin(true) }]
+        [{ text: t('common.ok'), onPress: () => setIsLogin(true) }]
       );
       clearForm();
     } else {
-      Alert.alert('Sign Up Failed', result.error);
+      Alert.alert(t('auth.signUpFailed'), result.error);
     }
   };
 
@@ -100,12 +102,12 @@ export const AuthScreen: React.FC = () => {
                 {/* Header */}
                 <View style={authStyles.authHeader}>
                   <Text style={authStyles.authTitle}>
-                    {isLogin ? 'Welcome Back' : 'Create Account'}
+                    {isLogin ? t('auth.welcomeBack') : t('auth.createAccount')}
                   </Text>
                   <Text style={authStyles.authSubtitle}>
                     {isLogin 
-                      ? 'Sign in to your account' 
-                      : 'Sign up to get started'
+                      ? t('auth.signInToAccount') 
+                      : t('auth.signUpToStart')
                     }
                   </Text>
                 </View>
@@ -113,12 +115,12 @@ export const AuthScreen: React.FC = () => {
                 {/* Form */}
                 <View style={authStyles.form}>
                   <View style={authStyles.inputGroup}>
-                    <Text style={authStyles.inputLabel}>Email</Text>
+                    <Text style={authStyles.inputLabel}>{t('auth.email')}</Text>
                     <View style={authStyles.inputContainer}>
                       <FontAwesome name="envelope" size={16} color={theme.colors.textMuted} style={authStyles.inputIcon} />
                       <TextInput
                         style={authStyles.textInput}
-                        placeholder="Enter your email"
+                        placeholder={t('auth.enterEmail')}
                         placeholderTextColor={theme.colors.textMuted}
                         value={email}
                         onChangeText={setEmail}
@@ -131,12 +133,12 @@ export const AuthScreen: React.FC = () => {
 
                   {!isLogin && (
                     <View style={authStyles.inputGroup}>
-                      <Text style={authStyles.inputLabel}>Full Name</Text>
+                      <Text style={authStyles.inputLabel}>{t('auth.fullName')}</Text>
                       <View style={authStyles.inputContainer}>
                         <FontAwesome name="user" size={16} color={theme.colors.textMuted} style={authStyles.inputIcon} />
                         <TextInput
                           style={authStyles.textInput}
-                          placeholder="Enter your full name"
+                          placeholder={t('auth.enterFullName')}
                           placeholderTextColor={theme.colors.textMuted}
                           value={displayName}
                           onChangeText={setDisplayName}
@@ -148,12 +150,12 @@ export const AuthScreen: React.FC = () => {
                   )}
 
                   <View style={authStyles.inputGroup}>
-                    <Text style={authStyles.inputLabel}>Password</Text>
+                    <Text style={authStyles.inputLabel}>{t('auth.password')}</Text>
                     <View style={authStyles.inputContainer}>
                       <FontAwesome name="lock" size={16} color={theme.colors.textMuted} style={authStyles.inputIcon} />
                       <TextInput
                         style={authStyles.textInput}
-                        placeholder="Enter your password"
+                        placeholder={t('auth.enterPassword')}
                         placeholderTextColor={theme.colors.textMuted}
                         value={password}
                         onChangeText={setPassword}
@@ -166,12 +168,12 @@ export const AuthScreen: React.FC = () => {
 
                   {!isLogin && (
                     <View style={authStyles.inputGroup}>
-                      <Text style={authStyles.inputLabel}>Confirm Password</Text>
+                      <Text style={authStyles.inputLabel}>{t('auth.confirmPassword')}</Text>
                       <View style={authStyles.inputContainer}>
                         <FontAwesome name="lock" size={16} color={theme.colors.textMuted} style={authStyles.inputIcon} />
                         <TextInput
                           style={authStyles.textInput}
-                          placeholder="Confirm your password"
+                          placeholder={t('auth.confirmPasswordPlaceholder')}
                           placeholderTextColor={theme.colors.textMuted}
                           value={confirmPassword}
                           onChangeText={setConfirmPassword}
@@ -188,7 +190,7 @@ export const AuthScreen: React.FC = () => {
                     <TouchableOpacity style={authStyles.forgotPassword} onPress={() => {
                       setShowForgotPassword(true);
                     }}>
-                      <Text style={authStyles.forgotPasswordText}>Forgot Password?</Text>
+                      <Text style={authStyles.forgotPasswordText}>{t('auth.forgotPassword')}</Text>
                     </TouchableOpacity>
                   )}
 
@@ -199,18 +201,18 @@ export const AuthScreen: React.FC = () => {
                     disabled={loading}
                   >
                     <Text style={authStyles.submitButtonText}>
-                      {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Sign Up')}
+                      {loading ? t('common.loading') : (isLogin ? t('auth.signIn') : t('auth.signUp'))}
                     </Text>
                   </TouchableOpacity>
 
                   {/* Switch Mode */}
                   <View style={authStyles.switchMode}>
                     <Text style={authStyles.switchModeText}>
-                      {isLogin ? "Don't have an account? " : "Already have an account? "}
+                      {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
                     </Text>
                     <TouchableOpacity onPress={switchMode}>
                       <Text style={authStyles.switchModeLink}>
-                        {isLogin ? 'Sign Up' : 'Sign In'}
+                        {isLogin ? t('auth.signUp') : t('auth.signIn')}
                       </Text>
                     </TouchableOpacity>
                   </View>
