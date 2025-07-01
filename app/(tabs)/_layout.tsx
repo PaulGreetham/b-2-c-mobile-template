@@ -25,28 +25,32 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: '',
+          title: 'Home',
+          headerTitle: '',
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
         }}
       />
       <Tabs.Screen
         name="products"
         options={{
-          title: '',
+          title: 'Products',
+          headerTitle: '',
           tabBarIcon: ({ color }) => <TabBarIcon name="shopping-bag" color={color} />,
         }}
       />
       <Tabs.Screen
         name="orders"
         options={{
-          title: '',
+          title: 'Orders',
+          headerTitle: '',
           tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: '',
+          title: 'Profile',
+          headerTitle: '',
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
         }}
       />
