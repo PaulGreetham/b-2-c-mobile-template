@@ -37,6 +37,21 @@ export default function SettingsScreen() {
     </TouchableOpacity>
   );
 
+  const renderCompactSettingItem = (
+    icon: React.ComponentProps<typeof FontAwesome>['name'],
+    title: string,
+    onPress?: () => void
+  ) => (
+    <TouchableOpacity 
+      style={[settingsStyles.compactSettingItem, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]} 
+      onPress={onPress}
+    >
+      <FontAwesome name={icon} size={18} color={theme.colors.primary} />
+      <Text style={[settingsStyles.compactSettingText, { color: theme.colors.text }]}>{title}</Text>
+      <FontAwesome name="chevron-right" size={14} color={theme.colors.textMuted} />
+    </TouchableOpacity>
+  );
+
   const settingsStyles = {
     container: {
       flex: 1,
@@ -77,6 +92,26 @@ export default function SettingsScreen() {
       elevation: 1,
       borderWidth: 1,
     },
+    compactSettingItem: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderRadius: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+      borderWidth: 1,
+      flex: 1,
+      gap: 8,
+    },
+    supportRow: {
+      flexDirection: 'row' as const,
+      gap: 8,
+      marginBottom: 8,
+    },
     textContainer: {
       flex: 1,
       marginLeft: 12,
@@ -84,6 +119,11 @@ export default function SettingsScreen() {
     settingText: {
       fontSize: 16,
       fontWeight: '500' as const,
+    },
+    compactSettingText: {
+      fontSize: 14,
+      fontWeight: '500' as const,
+      flex: 1,
     },
     subtitleText: {
       fontSize: 14,
@@ -117,13 +157,21 @@ export default function SettingsScreen() {
           {renderSettingItem('bell', t('settings.notifications'))}
         </View>
 
-        {/* Support Section */}
+        {/* Support Section - 2x2 Grid Layout */}
         <View style={settingsStyles.section}>
           <Text style={settingsStyles.sectionTitle}>{t('settings.support')}</Text>
-          {renderSettingItem('envelope', t('settings.contactSupport'))}
-          {renderSettingItem('question-circle', t('settings.qa'))}
-          {renderSettingItem('file-text', t('settings.termsOfService'))}
-          {renderSettingItem('shield', t('settings.privacyPolicy'))}
+          
+          {/* First row - Support and Q&As */}
+          <View style={settingsStyles.supportRow}>
+            {renderCompactSettingItem('envelope', t('settings.contactSupport'))}
+            {renderCompactSettingItem('question-circle', t('settings.qa'))}
+          </View>
+          
+          {/* Second row - Terms and Privacy */}
+          <View style={settingsStyles.supportRow}>
+            {renderCompactSettingItem('file-text', t('settings.termsOfService'))}
+            {renderCompactSettingItem('shield', t('settings.privacyPolicy'))}
+          </View>
         </View>
       </ScrollView>
 
