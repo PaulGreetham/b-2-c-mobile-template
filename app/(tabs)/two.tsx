@@ -63,6 +63,7 @@ export default function ProfileScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<UserType>(null);
 
@@ -78,6 +79,16 @@ export default function ProfileScreen() {
   const [pendingEmailChange, setPendingEmailChange] = useState<string | null>(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+
+  // Debug modal states
+  useEffect(() => {
+    console.log('Modal states:', {
+      showForgotPassword,
+      showChangeEmail,
+      showChangePassword,
+      showChangeName
+    });
+  }, [showForgotPassword, showChangeEmail, showChangePassword, showChangeName]);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -137,6 +148,7 @@ export default function ProfileScreen() {
     setEmail('');
     setPassword('');
     setConfirmPassword('');
+    setDisplayName('');
     setNewEmail('');
     setNewPassword('');
     setConfirmNewPassword('');
@@ -193,7 +205,7 @@ export default function ProfileScreen() {
   };
 
   const handleSignup = async () => {
-    if (!email || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword || !displayName.trim()) {
       Alert.alert('Missing Information', 'Please fill in all fields.');
       return;
     }
@@ -213,6 +225,17 @@ export default function ProfileScreen() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
+      console.log('User created:', user.uid);
+      console.log('Setting display name:', displayName.trim());
+      
+      // Set the display name
+      await updateProfile(user, { displayName: displayName.trim() });
+      
+      // Reload user to ensure the profile update is saved
+      await user.reload();
+      const updatedUser = auth.currentUser;
+      console.log('Display name after update:', updatedUser?.displayName);
+      
       // Send standard verification email (no Dynamic Links needed)
       await sendEmailVerification(user);
       await signOut(auth); // Sign out the user until they verify their email
@@ -228,6 +251,7 @@ export default function ProfileScreen() {
       setLoading(false);
     } catch (error: any) {
       setLoading(false);
+      console.log('Signup error:', error);
       Alert.alert('Sign Up Failed', getFirebaseErrorMessage(error.code));
     }
   };
@@ -472,6 +496,7 @@ export default function ProfileScreen() {
     setEmail('');
     setPassword('');
     setConfirmPassword('');
+    setDisplayName('');
   };
 
   const switchMode = () => {
@@ -757,10 +782,14 @@ export default function ProfileScreen() {
     <>
       <View style={styles.container}>
         <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardView}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
-          <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
             <View style={styles.content}>
               <View style={styles.authCard}>
                 {/* Header */}
@@ -796,6 +825,23 @@ export default function ProfileScreen() {
                       />
                     </View>
                   </View>
+
+                  {!isLogin && (
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Full Name</Text>
+                      <View style={styles.inputContainer}>
+                        <FontAwesome name="user" size={16} color="#9CA3AF" style={styles.inputIcon} />
+                        <TextInput
+                          style={styles.textInput}
+                          placeholder="Enter your full name"
+                          value={displayName}
+                          onChangeText={setDisplayName}
+                          autoCapitalize="words"
+                          autoCorrect={false}
+                        />
+                      </View>
+                    </View>
+                  )}
 
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Password</Text>
@@ -1207,6 +1253,6 @@ const styles = StyleSheet.create({
   profileContent: {
     flex: 1,
     padding: 20,
-    paddingTop: 30,
+    paddingTop: 60,
   },
 });
