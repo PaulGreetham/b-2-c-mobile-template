@@ -1,5 +1,5 @@
+import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
 import { useState, useEffect, useCallback } from 'react';
 import { auth } from '@/config/firebase';
@@ -14,7 +14,8 @@ import {
   sendEmailVerification,
   reauthenticateWithCredential,
   EmailAuthProvider,
-  verifyBeforeUpdateEmail
+  verifyBeforeUpdateEmail,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 
 type UserType = User | null;
@@ -75,6 +76,8 @@ export default function ProfileScreen() {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [pendingEmailChange, setPendingEmailChange] = useState<string | null>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -141,6 +144,8 @@ export default function ProfileScreen() {
     setNewDisplayName('');
     setShowChangeName(false);
     setPendingEmailChange(null);
+    setShowForgotPassword(false);
+    setResetEmail('');
   };
 
   const handleLogin = async () => {
@@ -279,6 +284,35 @@ export default function ProfileScreen() {
       Alert.alert('Verification Sent', 'A verification email has been sent to your inbox. Please check your email and click the verification link.');
     } catch (error: any) {
       Alert.alert('Error', getFirebaseErrorMessage(error.code));
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!resetEmail) {
+      Alert.alert('Missing Email', 'Please enter your email address.');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(resetEmail)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      setShowForgotPassword(false);
+      setResetEmail('');
+      Alert.alert(
+        'Password Reset Email Sent',
+        `A password reset link has been sent to ${resetEmail}.\n\nPlease check your inbox and click the link to reset your password.`
+      );
+    } catch (error: any) {
+      Alert.alert('Reset Failed', getFirebaseErrorMessage(error.code));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -448,348 +482,445 @@ export default function ProfileScreen() {
   // Logged in state - only show if user exists AND is verified
   if (user && user.emailVerified) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <View style={styles.profileHeader}>
-            <View style={styles.avatar}>
-              <FontAwesome name="user" size={32} color="white" />
+      <>
+        <View style={styles.container}>
+          <View style={styles.profileContent}>
+            <View style={styles.authHeader}>
+              <View style={styles.avatar}>
+                <FontAwesome name="user" size={32} color="white" />
+              </View>
+              
+              {/* Display Name Section */}
+              <View style={styles.nameSection}>
+                <View style={styles.nameDisplay}>
+                  <Text style={styles.profileName}>{user.displayName || 'Set your name'}</Text>
+                  <TouchableOpacity onPress={() => {
+                    setNewDisplayName(user.displayName || '');
+                    setShowChangeName(true);
+                  }}>
+                    <FontAwesome name="edit" size={16} color="#3B82F6" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <Text style={styles.profileEmail}>{user.email}</Text>
+              {pendingEmailChange && (
+                <View style={styles.pendingEmailContainer}>
+                  <FontAwesome name="clock-o" size={12} color="#F59E0B" />
+                  <Text style={styles.pendingEmailText}>
+                    Pending: {pendingEmailChange}
+                  </Text>
+                  <TouchableOpacity 
+                    onPress={refreshUserData}
+                    style={styles.refreshButton}
+                  >
+                    <FontAwesome name="refresh" size={10} color="#3B82F6" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={() => setPendingEmailChange(null)}
+                    style={styles.cancelPendingButton}
+                  >
+                    <FontAwesome name="times" size={10} color="#DC2626" />
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
             
-            {/* Display Name Section */}
-            <View style={styles.nameSection}>
-              <View style={styles.nameDisplay}>
-                <Text style={styles.profileName}>{user.displayName || 'Set your name'}</Text>
-                <TouchableOpacity onPress={() => {
-                  setNewDisplayName(user.displayName || '');
-                  setShowChangeName(true);
-                }}>
-                  <FontAwesome name="edit" size={16} color="#3B82F6" />
-                </TouchableOpacity>
+            {/* Action Buttons */}
+            <View style={styles.actionButtons}>
+              <TouchableOpacity style={styles.actionButton} onPress={() => setShowChangeEmail(true)}>
+                <FontAwesome name="envelope" size={16} color="#3B82F6" />
+                <Text style={styles.actionButtonText}>Change Email</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionButton} onPress={() => setShowChangePassword(true)}>
+                <FontAwesome name="lock" size={16} color="#3B82F6" />
+                <Text style={styles.actionButtonText}>Change Password</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                <FontAwesome name="sign-out" size={16} color="#DC2626" />
+                <Text style={styles.logoutText}>Sign Out</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
+                <FontAwesome name="trash" size={16} color="#DC2626" />
+                <Text style={styles.deleteButtonText}>Delete Account</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Change Email Modal */}
+          <Modal visible={showChangeEmail} transparent animationType="slide">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Change Email</Text>
+                
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>New Email</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={newEmail}
+                    onChangeText={setNewEmail}
+                    placeholder="Enter new email"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Current Password</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                    placeholder="Enter current password"
+                    secureTextEntry
+                  />
+                  <Text style={styles.inputHelpText}>
+                    Use the password for your current email address: {user.email}
+                  </Text>
+                </View>
+
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity style={styles.modalCancelButton} onPress={() => {
+                    setShowChangeEmail(false);
+                    setNewEmail('');
+                    setCurrentPassword('');
+                  }}>
+                    <Text style={styles.modalCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.modalSubmitButton, loading && styles.modalSubmitButtonDisabled]} 
+                    onPress={handleChangeEmail}
+                    disabled={loading}
+                  >
+                    <Text style={styles.modalSubmitText}>
+                      {loading ? 'Updating...' : 'Update Email'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
+          </Modal>
 
-            <Text style={styles.profileEmail}>{user.email}</Text>
-            {pendingEmailChange && (
-              <View style={styles.pendingEmailContainer}>
-                <FontAwesome name="clock-o" size={12} color="#F59E0B" />
-                <Text style={styles.pendingEmailText}>
-                  Pending: {pendingEmailChange}
-                </Text>
-                <TouchableOpacity 
-                  onPress={refreshUserData}
-                  style={styles.refreshButton}
-                >
-                  <FontAwesome name="refresh" size={10} color="#3B82F6" />
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  onPress={() => setPendingEmailChange(null)}
-                  style={styles.cancelPendingButton}
-                >
-                  <FontAwesome name="times" size={10} color="#DC2626" />
-                </TouchableOpacity>
+          {/* Change Password Modal */}
+          <Modal visible={showChangePassword} transparent animationType="slide">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Change Password</Text>
+                
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Current Password</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                    placeholder="Enter current password"
+                    secureTextEntry
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>New Password</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    placeholder="Enter new password"
+                    secureTextEntry
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Confirm New Password</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={confirmNewPassword}
+                    onChangeText={setConfirmNewPassword}
+                    placeholder="Confirm new password"
+                    secureTextEntry
+                  />
+                </View>
+
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity style={styles.modalCancelButton} onPress={() => {
+                    setShowChangePassword(false);
+                    setNewPassword('');
+                    setConfirmNewPassword('');
+                    setCurrentPassword('');
+                  }}>
+                    <Text style={styles.modalCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.modalSubmitButton, loading && styles.modalSubmitButtonDisabled]} 
+                    onPress={handleChangePassword}
+                    disabled={loading}
+                  >
+                    <Text style={styles.modalSubmitText}>
+                      {loading ? 'Updating...' : 'Update Password'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            )}
-          </View>
-          
-          {/* Action Buttons */}
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.actionButton} onPress={() => setShowChangeEmail(true)}>
-              <FontAwesome name="envelope" size={16} color="#3B82F6" />
-              <Text style={styles.actionButtonText}>Change Email</Text>
-            </TouchableOpacity>
+            </View>
+          </Modal>
 
-            <TouchableOpacity style={styles.actionButton} onPress={() => setShowChangePassword(true)}>
-              <FontAwesome name="lock" size={16} color="#3B82F6" />
-              <Text style={styles.actionButtonText}>Change Password</Text>
-            </TouchableOpacity>
+          {/* Change Name Modal */}
+          <Modal visible={showChangeName} transparent animationType="slide">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Change Name</Text>
+                
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Display Name</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={newDisplayName}
+                    onChangeText={setNewDisplayName}
+                    placeholder="Enter your display name"
+                    autoFocus
+                  />
+                </View>
 
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <FontAwesome name="sign-out" size={16} color="#DC2626" />
-              <Text style={styles.logoutText}>Sign Out</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
-              <FontAwesome name="trash" size={16} color="#DC2626" />
-              <Text style={styles.deleteButtonText}>Delete Account</Text>
-            </TouchableOpacity>
-          </View>
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity style={styles.modalCancelButton} onPress={() => {
+                    setShowChangeName(false);
+                    setNewDisplayName('');
+                  }}>
+                    <Text style={styles.modalCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.modalSubmitButton, loading && styles.modalSubmitButtonDisabled]} 
+                    onPress={handleUpdateDisplayName}
+                    disabled={loading}
+                  >
+                    <Text style={styles.modalSubmitText}>
+                      {loading ? 'Updating...' : 'Update Name'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
         </View>
 
-        {/* Change Email Modal */}
-        <Modal visible={showChangeEmail} transparent animationType="slide">
+        {/* Forgot Password Modal - Available in all states */}
+        <Modal visible={showForgotPassword} transparent animationType="slide">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Change Email</Text>
+              <Text style={styles.modalTitle}>Reset Password</Text>
+              
+              <Text style={styles.modalDescription}>
+                Enter your email address and we'll send you a link to reset your password.
+              </Text>
               
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>New Email</Text>
+                <Text style={styles.inputLabel}>Email Address</Text>
                 <TextInput
                   style={styles.modalInput}
-                  value={newEmail}
-                  onChangeText={setNewEmail}
-                  placeholder="Enter new email"
+                  value={resetEmail}
+                  onChangeText={setResetEmail}
+                  placeholder="Enter your email"
                   keyboardType="email-address"
                   autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Current Password</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  value={currentPassword}
-                  onChangeText={setCurrentPassword}
-                  placeholder="Enter current password"
-                  secureTextEntry
-                />
-                <Text style={styles.inputHelpText}>
-                  Use the password for your current email address: {user.email}
-                </Text>
-              </View>
-
-              <View style={styles.modalButtons}>
-                <TouchableOpacity style={styles.modalCancelButton} onPress={() => {
-                  setShowChangeEmail(false);
-                  setNewEmail('');
-                  setCurrentPassword('');
-                }}>
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.modalSubmitButton, loading && styles.modalSubmitButtonDisabled]} 
-                  onPress={handleChangeEmail}
-                  disabled={loading}
-                >
-                  <Text style={styles.modalSubmitText}>
-                    {loading ? 'Updating...' : 'Update Email'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Change Password Modal */}
-        <Modal visible={showChangePassword} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Change Password</Text>
-              
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Current Password</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  value={currentPassword}
-                  onChangeText={setCurrentPassword}
-                  placeholder="Enter current password"
-                  secureTextEntry
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>New Password</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  placeholder="Enter new password"
-                  secureTextEntry
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Confirm New Password</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  value={confirmNewPassword}
-                  onChangeText={setConfirmNewPassword}
-                  placeholder="Confirm new password"
-                  secureTextEntry
-                />
-              </View>
-
-              <View style={styles.modalButtons}>
-                <TouchableOpacity style={styles.modalCancelButton} onPress={() => {
-                  setShowChangePassword(false);
-                  setNewPassword('');
-                  setConfirmNewPassword('');
-                  setCurrentPassword('');
-                }}>
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.modalSubmitButton, loading && styles.modalSubmitButtonDisabled]} 
-                  onPress={handleChangePassword}
-                  disabled={loading}
-                >
-                  <Text style={styles.modalSubmitText}>
-                    {loading ? 'Updating...' : 'Update Password'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Change Name Modal */}
-        <Modal visible={showChangeName} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Change Name</Text>
-              
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Display Name</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  value={newDisplayName}
-                  onChangeText={setNewDisplayName}
-                  placeholder="Enter your display name"
                   autoFocus
                 />
               </View>
 
               <View style={styles.modalButtons}>
                 <TouchableOpacity style={styles.modalCancelButton} onPress={() => {
-                  setShowChangeName(false);
-                  setNewDisplayName('');
+                  setShowForgotPassword(false);
+                  setResetEmail('');
                 }}>
                   <Text style={styles.modalCancelText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.modalSubmitButton, loading && styles.modalSubmitButtonDisabled]} 
-                  onPress={handleUpdateDisplayName}
+                  onPress={handleForgotPassword}
                   disabled={loading}
                 >
                   <Text style={styles.modalSubmitText}>
-                    {loading ? 'Updating...' : 'Update Name'}
+                    {loading ? 'Sending...' : 'Send Reset Link'}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </Modal>
-      </SafeAreaView>
+      </>
     );
   }
 
   // Authentication state (show for non-authenticated users or unverified users)
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.content}>
-            <View style={styles.authCard}>
-              {/* Header */}
-              <View style={styles.authHeader}>
-                <FontAwesome name="user-circle" size={64} color="#3B82F6" />
-                <Text style={styles.authTitle}>
-                  {isLogin ? 'Welcome Back' : 'Create Account'}
-                </Text>
-                <Text style={styles.authSubtitle}>
-                  {isLogin 
-                    ? 'Sign in to your account' 
-                    : 'Sign up to get started'
-                  }
-                </Text>
-              </View>
-
-              {/* Form */}
-              <View style={styles.form}>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Email</Text>
-                  <View style={styles.inputContainer}>
-                    <FontAwesome name="envelope" size={16} color="#9CA3AF" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Enter your email"
-                      value={email}
-                      onChangeText={setEmail}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
+    <>
+      <View style={styles.container}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <View style={styles.content}>
+              <View style={styles.authCard}>
+                {/* Header */}
+                <View style={styles.authHeader}>
+                  <View style={styles.avatar}>
+                    <FontAwesome name="user" size={32} color="white" />
                   </View>
+                  <Text style={styles.authTitle}>
+                    {isLogin ? 'Welcome Back' : 'Create Account'}
+                  </Text>
+                  <Text style={styles.authSubtitle}>
+                    {isLogin 
+                      ? 'Sign in to your account' 
+                      : 'Sign up to get started'
+                    }
+                  </Text>
                 </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Password</Text>
-                  <View style={styles.inputContainer}>
-                    <FontAwesome name="lock" size={16} color="#9CA3AF" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChangeText={setPassword}
-                      secureTextEntry
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
-                  </View>
-                </View>
-
-                {!isLogin && (
+                {/* Form */}
+                <View style={styles.form}>
                   <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Confirm Password</Text>
+                    <Text style={styles.inputLabel}>Email</Text>
+                    <View style={styles.inputContainer}>
+                      <FontAwesome name="envelope" size={16} color="#9CA3AF" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.textInput}
+                        placeholder="Enter your email"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Password</Text>
                     <View style={styles.inputContainer}>
                       <FontAwesome name="lock" size={16} color="#9CA3AF" style={styles.inputIcon} />
                       <TextInput
                         style={styles.textInput}
-                        placeholder="Confirm your password"
-                        value={confirmPassword}
-                        onChangeText={setConfirmPassword}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChangeText={setPassword}
                         secureTextEntry
                         autoCapitalize="none"
                         autoCorrect={false}
                       />
                     </View>
                   </View>
-                )}
 
-                {/* Forgot Password Link (Login only) */}
-                {isLogin && (
-                  <TouchableOpacity style={styles.forgotPassword}>
-                    <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                  </TouchableOpacity>
-                )}
+                  {!isLogin && (
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Confirm Password</Text>
+                      <View style={styles.inputContainer}>
+                        <FontAwesome name="lock" size={16} color="#9CA3AF" style={styles.inputIcon} />
+                        <TextInput
+                          style={styles.textInput}
+                          placeholder="Confirm your password"
+                          value={confirmPassword}
+                          onChangeText={setConfirmPassword}
+                          secureTextEntry
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                        />
+                      </View>
+                    </View>
+                  )}
 
-                {/* Submit Button */}
-                <TouchableOpacity 
-                  style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-                  onPress={isLogin ? handleLogin : handleSignup}
-                  disabled={loading}
-                >
-                  <Text style={styles.submitButtonText}>
-                    {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Sign Up')}
-                  </Text>
-                </TouchableOpacity>
+                  {/* Forgot Password Link (Login only) */}
+                  {isLogin && (
+                    <TouchableOpacity style={styles.forgotPassword} onPress={() => {
+                      setResetEmail(email); // Pre-fill with current email input
+                      setShowForgotPassword(true);
+                    }}>
+                      <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                    </TouchableOpacity>
+                  )}
 
-                {/* Switch Mode */}
-                <View style={styles.switchMode}>
-                  <Text style={styles.switchModeText}>
-                    {isLogin ? "Don't have an account? " : "Already have an account? "}
-                  </Text>
-                  <TouchableOpacity onPress={switchMode}>
-                    <Text style={styles.switchModeLink}>
-                      {isLogin ? 'Sign Up' : 'Sign In'}
+                  {/* Submit Button */}
+                  <TouchableOpacity 
+                    style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                    onPress={isLogin ? handleLogin : handleSignup}
+                    disabled={loading}
+                  >
+                    <Text style={styles.submitButtonText}>
+                      {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Sign Up')}
                     </Text>
                   </TouchableOpacity>
+
+                  {/* Switch Mode */}
+                  <View style={styles.switchMode}>
+                    <Text style={styles.switchModeText}>
+                      {isLogin ? "Don't have an account? " : "Already have an account? "}
+                    </Text>
+                    <TouchableOpacity onPress={switchMode}>
+                      <Text style={styles.switchModeLink}>
+                        {isLogin ? 'Sign Up' : 'Sign In'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
+
+      {/* Forgot Password Modal - Available in all states */}
+      <Modal visible={showForgotPassword} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Reset Password</Text>
+            
+            <Text style={styles.modalDescription}>
+              Enter your email address and we'll send you a link to reset your password.
+            </Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email Address</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={resetEmail}
+                onChangeText={setResetEmail}
+                placeholder="Enter your email"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoFocus
+              />
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.modalCancelButton} onPress={() => {
+                setShowForgotPassword(false);
+                setResetEmail('');
+              }}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.modalSubmitButton, loading && styles.modalSubmitButtonDisabled]} 
+                onPress={handleForgotPassword}
+                disabled={loading}
+              >
+                <Text style={styles.modalSubmitText}>
+                  {loading ? 'Sending...' : 'Send Reset Link'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </View>
+      </Modal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'white',
   },
   keyboardView: {
     flex: 1,
@@ -799,26 +930,28 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 0,
     paddingTop: 0,
   },
   authCard: {
     backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 32,
+    padding: 46,
     width: '100%',
+    height: '100%',
     maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
   },
   authHeader: {
     alignItems: 'center',
     marginBottom: 32,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#3B82F6',
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   authTitle: {
     fontSize: 28,
@@ -904,18 +1037,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 20,
     backgroundColor: 'white',
-    marginHorizontal: -24,
-    paddingHorizontal: 24,
-    marginTop: -40,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    backgroundColor: '#3B82F6',
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 12,
   },
   nameSection: {
     alignItems: 'center',
@@ -938,7 +1063,7 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flex: 1,
-    paddingTop: 20,
+    paddingTop: 30,
     gap: 12,
   },
   actionButton: {
@@ -1073,5 +1198,15 @@ const styles = StyleSheet.create({
   },
   refreshButton: {
     padding: 4,
+  },
+  modalDescription: {
+    color: '#6B7280',
+    fontSize: 14,
+    marginBottom: 20,
+  },
+  profileContent: {
+    flex: 1,
+    padding: 20,
+    paddingTop: 30,
   },
 });
