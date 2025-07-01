@@ -1,13 +1,12 @@
 import { View, StyleSheet, Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProductsScreen() {
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Products</Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
